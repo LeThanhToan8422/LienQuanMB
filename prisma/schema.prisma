@@ -1,0 +1,113 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+/**
+ * Prisma Client Generator Configuration
+ * Generates the Prisma client for database operations
+ */
+generator client {
+  provider = "prisma-client-js"
+}
+
+/**
+ * Database Configuration
+ * PostgreSQL database connection settings
+ */
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --------------------
+// Enums
+// --------------------
+
+/**
+ * User Role Enumeration
+ * Defines the available user roles in the system
+ */
+enum UserRole {
+  USER  // Regular user with basic permissions
+  ADMIN // Administrator with full system access
+}
+
+/**
+ * Account Status Enumeration
+ * Defines the available statuses for game accounts
+ */
+enum AccountStatus {
+  available // Account is available for purchase
+  reserved  // Account is reserved by a buyer
+  sold      // Account has been sold
+  hidden    // Account is hidden from public view
+}
+
+// --------------------
+// Models
+// --------------------
+
+/**
+ * User Model
+ * Represents a user in the system with authentication and authorization
+ */
+model User {
+  id                String    @id @default(cuid()) // Unique user identifier
+  email             String    @unique              // User's email address (unique)
+  passwordHash      String                         // Hashed password for security
+  name              String?                        // Optional user display name
+  role              UserRole  @default(USER)       // User role (USER or ADMIN)
+  emailVerifiedAt   DateTime?                      // Email verification timestamp
+  twoFactorEnabled  Boolean   @default(false)      // Two-factor authentication status
+  createdAt         DateTime  @default(now())      // Account creation timestamp
+  updatedAt         DateTime  @updatedAt           // Last update timestamp
+
+  // Relations
+  auditLogs         AuditLog[] // One-to-many relationship with audit logs
+}
+
+/**
+ * AccountForSale Model
+ * Represents a game account available for sale with detailed metadata
+ */
+model AccountForSale {
+  id          String   @id @default(cuid()) // Unique account identifier
+  rank        String?                       // Game rank (Diamond, Master, etc.)
+  price       Int                           // Account price in VND
+  heroesCount Int                           // Number of heroes owned
+  skinsCount  Int                           // Number of skins owned
+  status      String   @default("available") // Account availability status
+  description String?                       // Optional account description
+  images      String[]                      // Array of image URLs for the account
+  
+  // Additional metadata fields - important for querying and filtering
+  level       Int?  // Account level (V, VI, VII, etc.)
+  matches     Int?     // Total number of matches played
+  winRate     Float?   // Win rate percentage (0-100)
+  reputation  Int?     // Account reputation score (0-100)
+  
+  // Character skins data - stored as JSON for flexibility
+  characterSkins Json?  // JSON object containing array of character skins
+  
+  createdAt   DateTime @default(now()) // Account creation timestamp
+  updatedAt   DateTime @updatedAt      // Last update timestamp
+}
+
+/**
+ * AuditLog Model
+ * Tracks system activities and changes for security and compliance
+ */
+model AuditLog {
+  id         String   @id @default(cuid()) // Unique log identifier
+  userId     String?                        // ID of user who performed the action
+  action     String                         // Action performed (CREATE, UPDATE, DELETE, etc.)
+  entityType String                         // Type of entity affected (User, Account, etc.)
+  entityId   String                         // ID of the affected entity
+  meta       Json?                          // Additional metadata about the action
+  createdAt  DateTime @default(now())       // Log creation timestamp
+
+  // Relations
+  user       User?    @relation(fields: [userId], references: [id]) // Optional user relation
+}

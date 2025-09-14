@@ -19,6 +19,10 @@ const eslintConfig = [
       "build/**",
       "next-env.d.ts",
     ],
+    // rules: {
+    //   "react/style-prop-object": "off",
+    //   "react/forbid-dom-props": ["warn", { forbid: ["style"] }],
+    // },
   },
 ];
 
