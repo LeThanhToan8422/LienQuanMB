@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
 
 // File: src/app/api/accounts/[id]/route.ts
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const account = await prisma.accountForSale.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         rank: true,
@@ -44,9 +44,10 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
 
     // Validate required fields
@@ -137,7 +138,7 @@ export async function PUT(
     };
 
     const account = await prisma.accountForSale.update({
-      where: { id: params.id },
+      where: { id },
       data,
     });
 
@@ -153,10 +154,10 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     if (!id) {
       return NextResponse.json({ error: "ID is required" }, { status: 400 });
